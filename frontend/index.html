@@ -1,5 +1,249 @@
-<h2>AAPL Price</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto Trading Dashboard</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --panel: rgba(255, 252, 247, 0.92);
+      --accent: #1c6e5b;
+      --accent-strong: #12473b;
+      --danger: #8f2d2d;
+      --text: #1f2933;
+      --muted: #607080;
+      --line: rgba(31, 41, 51, 0.12);
+      --shadow: 0 20px 50px rgba(28, 49, 64, 0.12);
+    }
 
-<div id="price">Loading...</div>
+    * { box-sizing: border-box; }
 
-<script src="dashboard.js"></script>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(28, 110, 91, 0.14), transparent 30%),
+        linear-gradient(135deg, #f8f3ea 0%, #ece3d4 100%);
+    }
+
+    .shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+
+    .hero {
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent-strong);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 5vw, 56px);
+      line-height: 0.95;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      backdrop-filter: blur(18px);
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .subvalue {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+    .primary { background: var(--accent); color: white; }
+    .secondary { background: #d8e5df; color: var(--accent-strong); }
+    .danger { background: #efd8d8; color: var(--danger); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #e1efe9;
+      color: var(--accent-strong);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill.off { background: #f3dddd; color: var(--danger); }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 16px 0 4px;
+    }
+
+    @media (max-width: 640px) {
+      .shell { padding: 24px 14px 36px; }
+      .panel { border-radius: 18px; }
+      th:nth-child(5), td:nth-child(5),
+      th:nth-child(8), td:nth-child(8) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="eyebrow">Interactive Brokers</div>
+      <h1>Auto Trading Dashboard</h1>
+      <div class="subtitle">
+        Monitor the bot, run one cycle on demand, and review recent trade decisions with strategy and risk context.
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <div class="label">Bot Status</div>
+        <div class="value" id="bot-running">Loading...</div>
+        <div class="subvalue" id="bot-started-at">Waiting for data</div>
+        <div class="controls">
+          <button class="primary" id="start-button">Start</button>
+          <button class="danger" id="stop-button">Stop</button>
+          <button class="secondary" id="run-once-button">Run Once</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Strategy</div>
+        <div class="value" id="strategy-name">-</div>
+        <div class="subvalue" id="strategy-options">-</div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Universe</div>
+        <div class="value" id="symbols">-</div>
+        <div class="subvalue" id="schedule">-</div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Daily Activity</div>
+        <div class="value" id="trades-today">0</div>
+        <div class="subvalue" id="last-run">No cycle yet</div>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-bottom: 16px;">
+      <div class="label">Latest Cycle</div>
+      <div id="latest-results" class="empty">Waiting for status...</div>
+    </section>
+
+    <section class="panel">
+      <div class="label">Recent Trades</div>
+      <div id="trades-empty" class="empty">No trades logged yet.</div>
+      <table id="trades-table" hidden>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Symbol</th>
+            <th>Action</th>
+            <th>Status</th>
+            <th>Strategy</th>
+            <th>Price</th>
+            <th>Reason</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="trades-body"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
