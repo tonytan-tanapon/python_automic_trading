@@ -1,16 +1,18 @@
 from fastapi import APIRouter
-from app.services.ib_client import connect_ib
+from app.services.ib_client import ib_call
 
 router = APIRouter(prefix="/account", tags=["Account"])
 
+
 @router.get("/")
 def get_account():
-    ib = connect_ib()
-    summary = ib.accountSummary()
+    def _get_account(ib):
+        summary = ib.accountSummary()
+        result = {}
 
-    result = {}
+        for item in summary:
+            result[item.tag] = item.value
 
-    for item in summary:
-        result[item.tag] = item.value
+        return result
 
-    return result
+    return ib_call(_get_account)

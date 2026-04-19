@@ -61,6 +61,7 @@ class AutoTradingEngine:
         return self.status()
 
     async def startup(self):
+        # Automatically start the engine defult is false, set AUTO_TRADING_AUTOSTART=true to enable
         if AUTO_TRADING_AUTOSTART:
             await self.start()
 
@@ -73,7 +74,7 @@ class AutoTradingEngine:
         cycle_results = {}
 
         for symbol in self.symbols:
-            cycle_results[symbol] = self._evaluate_symbol(symbol)
+            cycle_results[symbol] = await asyncio.to_thread(self._evaluate_symbol, symbol)
 
         self._latest_results = cycle_results
         return self.status()

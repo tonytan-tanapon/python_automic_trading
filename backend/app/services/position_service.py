@@ -1,32 +1,32 @@
-from app.services.ib_client import connect_ib
+from app.services.ib_client import ib_call
+from app.services.contracts import contract_symbol, format_symbol, is_forex_symbol, normalize_symbol
 
 
 def get_positions():
+    def _get_positions(ib):
+        positions = ib.positions()
+        result = []
 
-    ib = connect_ib()
+        for p in positions:
+            result.append({
+                "symbol": contract_symbol(p.contract),
+                "secType": p.contract.secType,
+                "exchange": p.contract.exchange,
+                "position": p.position,
+                "avgCost": p.avgCost,
+            })
 
-    positions = ib.positions()
+        return result
 
-    result = []
-
-    for p in positions:
-
-        result.append({
-            "symbol": p.contract.symbol,
-            "secType": p.contract.secType,
-            "exchange": p.contract.exchange,
-            "position": p.position,
-            "avgCost": p.avgCost
-        })
-
-    return result
+    return ib_call(_get_positions)
 
 
 def get_symbol_position(symbol: str) -> float:
     positions = get_positions()
+    target_symbol = normalize_symbol(symbol)
 
     for position in positions:
-        if position["symbol"].upper() == symbol.upper():
+        if normalize_symbol(position["symbol"]) == target_symbol:
             return float(position["position"])
 
     return 0.0
@@ -34,9 +34,10 @@ def get_symbol_position(symbol: str) -> float:
 
 def get_symbol_position_details(symbol: str) -> dict:
     positions = get_positions()
+    target_symbol = normalize_symbol(symbol)
 
     for position in positions:
-        if position["symbol"].upper() == symbol.upper():
+        if normalize_symbol(position["symbol"]) == target_symbol:
             return {
                 "symbol": position["symbol"],
                 "position": float(position["position"]),
@@ -46,9 +47,9 @@ def get_symbol_position_details(symbol: str) -> dict:
             }
 
     return {
-        "symbol": symbol.upper(),
+        "symbol": format_symbol(symbol),
         "position": 0.0,
         "avgCost": 0.0,
-        "exchange": "SMART",
-        "secType": "STK",
+        "exchange": "IDEALPRO" if is_forex_symbol(target_symbol) else "SMART",
+        "secType": "CASH" if is_forex_symbol(target_symbol) else "STK",
     }
