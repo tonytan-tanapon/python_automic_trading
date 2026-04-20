@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
-app.mount("/assets", StaticFiles(directory=FRONTEND_DIR), name="frontend-assets")
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="frontend-assets")
 
 
 @app.on_event("startup")
@@ -37,7 +37,7 @@ async def shutdown_event():
 
 @app.get("/")
 def dashboard():
-    return FileResponse(FRONTEND_DIR / "index.html")
+    return FileResponse(FRONTEND_DIR / "auto_trade.html")
 
 
 @app.get("/health")

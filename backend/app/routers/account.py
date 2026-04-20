@@ -1,12 +1,7 @@
 from fastapi import APIRouter, HTTPException
-from app.services.ib_client import get_ib_connection_status, ib_call
+from app.services.ib_client import ib_call
 
 router = APIRouter(prefix="/account", tags=["Account"])
-
-
-@router.get("/connection")
-def get_account_connection():
-    return get_ib_connection_status()
 
 
 @router.get("/")

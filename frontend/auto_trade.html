@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auto Trade Dashboard</title>
+    <style>
+      :root {
+        --bg-top: #f5efe5;
+        --bg-bottom: #e4d6c2;
+        --panel: rgba(255, 250, 244, 0.9);
+        --line: rgba(54, 43, 32, 0.12);
+        --text: #2f241b;
+        --muted: #756556;
+        --start: #1f6b52;
+        --start-dark: #154a39;
+        --stop: #9b2d30;
+        --stop-dark: #6d1f21;
+        --run: #d9b16a;
+        --run-dark: #8a6527;
+        --shadow: 0 24px 60px rgba(69, 45, 18, 0.15);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(31, 107, 82, 0.14), transparent 30%),
+          radial-gradient(circle at bottom right, rgba(217, 177, 106, 0.2), transparent 32%),
+          linear-gradient(135deg, var(--bg-top), var(--bg-bottom));
+      }
+
+      .dashboard {
+        width: min(100%, 920px);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        padding: 32px;
+        backdrop-filter: blur(14px);
+      }
+
+      .eyebrow {
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      h1 {
+        margin: 10px 0 12px;
+        font-size: clamp(32px, 5vw, 52px);
+        line-height: 0.95;
+      }
+
+      .subtitle {
+        margin: 0;
+        max-width: 560px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .control-card {
+        margin-top: 28px;
+        padding: 24px;
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.55);
+      }
+
+      .control-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 20px;
+        align-items: start;
+      }
+
+      .form-block {
+        margin-top: 18px;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      .symbol-input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px 16px;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.78);
+        outline: none;
+      }
+
+      .symbol-input:focus {
+        border-color: rgba(31, 107, 82, 0.45);
+        box-shadow: 0 0 0 4px rgba(31, 107, 82, 0.08);
+      }
+
+      .status-label {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      .summary-stack {
+        display: grid;
+        gap: 14px;
+      }
+
+      .summary-card {
+        padding: 18px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      .connection-card {
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.46);
+      }
+
+      .status-value {
+        margin-top: 10px;
+        font-size: 30px;
+        font-weight: 700;
+      }
+
+      .status-meta {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .connection-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .connection-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        background: #efe2ce;
+        color: var(--run-dark);
+      }
+
+      .connection-pill.connected {
+        background: #dbeee6;
+        color: var(--start-dark);
+      }
+
+      .connection-pill.disconnected {
+        background: #f1d9d9;
+        color: var(--stop-dark);
+      }
+
+      .connection-meta {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .connection-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      button {
+        border: none;
+        border-radius: 18px;
+        min-height: 72px;
+        padding: 16px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          transform 0.16s ease,
+          box-shadow 0.16s ease,
+          opacity 0.16s ease;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .start {
+        background: var(--start);
+        color: #fff;
+        box-shadow: 0 16px 30px rgba(31, 107, 82, 0.25);
+      }
+
+      .stop {
+        background: var(--stop);
+        color: #fff;
+        box-shadow: 0 16px 30px rgba(155, 45, 48, 0.22);
+      }
+
+      .run-once {
+        background: var(--run);
+        color: var(--run-dark);
+        box-shadow: 0 16px 30px rgba(138, 101, 39, 0.18);
+      }
+
+      .connect {
+        min-height: 54px;
+        border-radius: 14px;
+        background: #dbeee6;
+        color: var(--start-dark);
+        box-shadow: none;
+      }
+
+      .disconnect {
+        min-height: 54px;
+        border-radius: 14px;
+        background: #f1d9d9;
+        color: var(--stop-dark);
+        box-shadow: none;
+      }
+
+      .reconnect {
+        min-height: 54px;
+        border-radius: 14px;
+        background: #efe2ce;
+        color: var(--run-dark);
+        box-shadow: none;
+      }
+
+      .log {
+        margin-top: 18px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        border: 1px dashed var(--line);
+        background: rgba(255, 255, 255, 0.4);
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .log strong {
+        color: var(--text);
+      }
+
+      @media (max-width: 860px) {
+        .control-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .dashboard {
+          padding: 24px;
+          border-radius: 22px;
+        }
+
+        .connection-actions,
+        .actions {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="dashboard">
+      <section class="control-card">
+        <div class="control-grid">
+          <div>
+            <div class="connection-card" style="margin-bottom: 18px">
+              <div class="connection-head">
+                <div class="status-label">TWS Connection</div>
+                <div id="tws-connection-pill" class="connection-pill">Checking</div>
+              </div>
+              <div id="tws-connection-message" class="connection-meta">
+                <div>Waiting for connection status...</div>
+              </div>
+              <div class="connection-actions">
+                <button id="tws-connect-button" class="connect" type="button">Connect</button>
+                <button id="tws-disconnect-button" class="disconnect" type="button">Disconnect</button>
+                <button id="tws-reconnect-button" class="reconnect" type="button">Reconnect</button>
+              </div>
+            </div>
+
+            <div class="status-label">Symbol</div>
+            <div class="form-block" style="margin-top: 10px">
+              <input
+                id="symbol-input"
+                class="symbol-input"
+                type="text"
+                value="TSLA"
+                placeholder="Enter symbol"
+                autocomplete="off"
+              />
+            </div>
+
+            <section class="actions">
+              <button id="start-button" class="start" type="button">START</button>
+              <button id="stop-button" class="stop" type="button">STOP</button>
+              <button id="run-once-button" class="run-once" type="button">Run Once</button>
+            </section>
+          </div>
+
+          <div class="summary-stack">
+            <section class="summary-card">
+              <div class="status-label">Bot Status</div>
+              <div id="status-value" class="status-value">Idle</div>
+              <div id="status-meta" class="status-meta">No backend connected yet.</div>
+            </section>
+
+            <section id="log" class="log">
+              <strong>Action:</strong> Ready. Connect TWS and choose a symbol to begin.
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/auto_trade.js"></script>
+  </body>
+</html>
